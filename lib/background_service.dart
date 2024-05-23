@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:ui';
+import 'package:background_service/main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 
 Future<void> initializeServices() async {
   final services = FlutterBackgroundService();
@@ -15,7 +18,9 @@ Future<void> initializeServices() async {
 }
 
 @pragma('vm:entry-point')
-void onStart(ServiceInstance service) {
+void onStart(ServiceInstance service) async {
+  var box = await openBoxx("timeBox");
+
   DartPluginRegistrant.ensureInitialized();
   if (service is AndroidServiceInstance) {
     service.on("setAsForeground").listen((event) {
@@ -29,13 +34,17 @@ void onStart(ServiceInstance service) {
     service.stopSelf();
   });
 
-  Timer.periodic(const Duration(seconds: 10), (timer) async {
+  Timer.periodic(const Duration(minutes: 2), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         service.setForegroundNotificationInfo(
-            title: "this is title of Forground Service",
+            title: "this is title of",
             content: "this is content of Forground Service");
+        String time = DateFormat("hh:mm aaa").format(DateTime.now());
+        await box.add(time);
+        log(box.values.toList().toString());
       }
+
       //  service.openApp();
       Fluttertoast.showToast(
           msg: "This is Center Short Toast",
